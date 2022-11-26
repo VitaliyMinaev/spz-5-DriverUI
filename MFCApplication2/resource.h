@@ -12,6 +12,8 @@
 #define IDC_DELETE                      1004
 #define IDC_NAME                        1005
 #define IDC_LINK                        1006
+#define IDC_START                       1007
+#define IDC_STOP                        1008
 
 // Next default values for new objects
 // 

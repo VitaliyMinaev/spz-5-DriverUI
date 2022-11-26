@@ -36,4 +36,6 @@ public:
 	afx_msg void OnEnChangeFile();
 	afx_msg void OnEnChangeName();
 	afx_msg void OnBnClickedDelete();
+	afx_msg void OnBnClickedStart();
+	afx_msg void OnBnClickedStop();
 };
