@@ -7,7 +7,10 @@
 #include "MFCApplication2.h"
 #include "MFCApplication2Dlg.h"
 #include "afxdialogex.h"
-
+#include "winioctl.h"
+#include "Strsafe.h"
+#define DEVICE_SEND CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define DEVICE_REC CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_READ_DATA)
 
 
 
@@ -70,6 +73,10 @@ BEGIN_MESSAGE_MAP(CMFCApplication2Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_DELETE, &CMFCApplication2Dlg::OnBnClickedDelete)
 	ON_BN_CLICKED(IDC_START, &CMFCApplication2Dlg::OnBnClickedStart)
 	ON_BN_CLICKED(IDC_STOP, &CMFCApplication2Dlg::OnBnClickedStop)
+	ON_BN_CLICKED(IDC_OPEN, &CMFCApplication2Dlg::OnBnClickedOpen)
+	ON_BN_CLICKED(IDC_CLOSE, &CMFCApplication2Dlg::OnBnClickedClose)
+	ON_BN_CLICKED(IDC_SEND, &CMFCApplication2Dlg::OnBnClickedSend)
+	ON_BN_CLICKED(IDC_REC, &CMFCApplication2Dlg::OnBnClickedRec)
 END_MESSAGE_MAP()
 
 
@@ -165,6 +172,7 @@ SERVICE_STATUS ssStatus;
 void Trace(LPWSTR info);
 SC_HANDLE InitManager();
 BOOL __stdcall StopDependentServices();
+
 void CMFCApplication2Dlg::OnBnClickedAdd()
 {	
     if (filepath.GetString() == L"") {
@@ -182,7 +190,7 @@ void CMFCApplication2Dlg::OnBnClickedAdd()
 		svcname.GetString(),       // name of service 
 		svcname.GetString(),       // service name to display 
 		SERVICE_ALL_ACCESS,        // desired access 
-		SERVICE_WIN32_OWN_PROCESS, // service type 
+		SERVICE_KERNEL_DRIVER,	   // service type 
 		SERVICE_DEMAND_START,      // start type 
 		SERVICE_ERROR_NORMAL,      // error control type 
 		filepath.GetString(),      // path to service's binary 
@@ -205,21 +213,15 @@ void CMFCApplication2Dlg::OnBnClickedAdd()
 	CloseServiceHandle(schSCManager);
 
 }
-
 void CMFCApplication2Dlg::OnEnChangeFile()
 {
 	GetDlgItem(IDC_FILE)->GetWindowTextW(filepath);
     MessageBox(filepath.GetString());
 }
-
-
-
 void CMFCApplication2Dlg::OnEnChangeName()
 {
 	GetDlgItem(IDC_NAME)->GetWindowTextW(svcname);
 }
-
-
 void CMFCApplication2Dlg::OnBnClickedDelete()
 {	
 	schSCManager = InitManager();  // full access rights 
@@ -254,7 +256,7 @@ void CMFCApplication2Dlg::OnBnClickedDelete()
 }
 void Trace(LPWSTR info)
 {
-	wsprintf(info, info, GetLastError());
+	/*StringCbPrintfW(info, wcslen(info)+1, info,);*/
 	MessageBox(0,info,0,0);
 }
 BOOL __stdcall StopDependentServices()
@@ -357,7 +359,6 @@ SC_HANDLE InitManager()
 		NULL,                    // ServicesActive database 
 		SC_MANAGER_ALL_ACCESS);
 }
-
 void CMFCApplication2Dlg::OnBnClickedStart()
 {
 	SERVICE_STATUS_PROCESS ssStatus;
@@ -563,17 +564,15 @@ void CMFCApplication2Dlg::OnBnClickedStart()
 	else
 	{
 		Trace(_T("Service not started. \n"));
-		Trace(_T("  Current State: %d\n", ssStatus.dwCurrentState));
-		Trace(_T("  Exit Code: %d\n", ssStatus.dwWin32ExitCode));
-		Trace(_T("  Check Point: %d\n", ssStatus.dwCheckPoint));
-		Trace(_T("  Wait Hint: %d\n", ssStatus.dwWaitHint));
+		Trace(_T("  Current State: %d\n"/*, ssStatus.dwCurrentState*/));
+		Trace(_T("  Exit Code: %d\n"/*, ssStatus.dwWin32ExitCode*/));
+		Trace(_T("  Check Point: %d\n"/*, ssStatus.dwCheckPoint*/));
+		Trace(_T("  Wait Hint: %d\n"/*, ssStatus.dwWaitHint*/));
 	}
 
 	CloseServiceHandle(schService);
 	CloseServiceHandle(schSCManager);
 }
-
-
 void CMFCApplication2Dlg::OnBnClickedStop()
 {
 	SERVICE_STATUS_PROCESS ssp;
@@ -715,4 +714,85 @@ void CMFCApplication2Dlg::OnBnClickedStop()
 stop_cleanup:
 	CloseServiceHandle(schService);
 	CloseServiceHandle(schSCManager);
+}
+
+HANDLE devicehandle = NULL;
+void CMFCApplication2Dlg::OnBnClickedOpen()
+{
+	devicehandle = CreateFile(
+		L"\\\\.\\link-my-win-device",
+		GENERIC_ALL,
+		NULL,
+		NULL,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_SYSTEM,
+		NULL
+	);
+	if (devicehandle == INVALID_HANDLE_VALUE)
+	{
+		MessageBox(L"cannot open device", 0, 0);
+		return;
+	}
+	MessageBox(L"device opened", 0, 0);
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedClose()
+{
+	if (devicehandle != INVALID_HANDLE_VALUE)
+		CloseHandle(devicehandle);
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedSend()
+{
+	WCHAR* message = L"message from ap";
+	ULONG returnLength;
+	char wr[4] = { 0 };
+	if (devicehandle != INVALID_HANDLE_VALUE && devicehandle != NULL)
+	{
+		if (!DeviceIoControl(
+			devicehandle,
+			DEVICE_SEND,
+			message,
+			(wcslen(message) + 1) * 2,
+			NULL,
+			0,
+			&returnLength, 0
+		))
+		{
+			MessageBox(L"DeviceIOControl error", 0, 0);
+		}
+		else
+		{
+			_itoa_s(returnLength, wr, 10);
+			MessageBoxA(0, wr, 0, 0);
+		}
+	}
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedRec()
+{
+	WCHAR message[1024] = { 0 };
+	ULONG returnLength = 0;
+	if (devicehandle != INVALID_HANDLE_VALUE && devicehandle != NULL)
+	{
+		if (!DeviceIoControl(
+			devicehandle,
+			DEVICE_REC,
+			NULL,
+			0,
+			message,
+			1024,
+			&returnLength, 0
+		))
+		{
+			MessageBox(L"DeviceIOControl error", 0, 0);
+		}
+		else		
+		{			
+			MessageBox(message,0);
+		}
+	}
 }

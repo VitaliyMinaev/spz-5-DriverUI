@@ -14,6 +14,10 @@
 #define IDC_LINK                        1006
 #define IDC_START                       1007
 #define IDC_STOP                        1008
+#define IDC_OPEN                        1009
+#define IDC_CLOSE                       1010
+#define IDC_SEND                        1011
+#define IDC_REC                         1012
 
 // Next default values for new objects
 // 

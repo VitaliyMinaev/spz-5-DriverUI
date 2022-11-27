@@ -38,4 +38,8 @@ public:
 	afx_msg void OnBnClickedDelete();
 	afx_msg void OnBnClickedStart();
 	afx_msg void OnBnClickedStop();
+	afx_msg void OnBnClickedOpen();
+	afx_msg void OnBnClickedClose();
+	afx_msg void OnBnClickedSend();
+	afx_msg void OnBnClickedRec();
 };
