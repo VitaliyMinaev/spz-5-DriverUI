@@ -9,15 +9,22 @@
 #include "afxdialogex.h"
 #include "winioctl.h"
 #include "Strsafe.h"
-#define DEVICE_SEND CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_WRITE_DATA)
-#define DEVICE_REC CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_READ_DATA)
+#include <winsvc.h>
+
+#define DEVICE_SEND_BUFF CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define DEVICE_SEND_DIRECT CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_IN_DIRECT, FILE_WRITE_DATA)
+#define DEVICE_SEND_NEITHER CTL_CODE(FILE_DEVICE_UNKNOWN, 0x803, METHOD_NEITHER, FILE_WRITE_DATA)
+
+#define DEVICE_REC_BUFF CTL_CODE(FILE_DEVICE_UNKNOWN, 0x804, METHOD_BUFFERED, FILE_READ_DATA)
+#define DEVICE_REC_DIRECT CTL_CODE(FILE_DEVICE_UNKNOWN, 0x805, METHOD_IN_DIRECT, FILE_READ_DATA)
+#define DEVICE_REC_NEITHER CTL_CODE(FILE_DEVICE_UNKNOWN, 0x806, METHOD_NEITHER, FILE_READ_DATA)
 
 
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-#include <winsvc.h>
+
 
 
 // Диалоговое окно CAboutDlg используется для описания сведений о приложении
@@ -739,8 +746,10 @@ void CMFCApplication2Dlg::OnBnClickedOpen()
 
 void CMFCApplication2Dlg::OnBnClickedClose()
 {
-	if (devicehandle != INVALID_HANDLE_VALUE)
+	if (devicehandle != INVALID_HANDLE_VALUE) {
 		CloseHandle(devicehandle);
+		Trace(_T("Device closed succesfully"));
+	}
 }
 
 
@@ -753,7 +762,7 @@ void CMFCApplication2Dlg::OnBnClickedSend()
 	{
 		if (!DeviceIoControl(
 			devicehandle,
-			DEVICE_SEND,
+			DEVICE_SEND_BUFF,
 			message,
 			(wcslen(message) + 1) * 2,
 			NULL,
@@ -768,6 +777,40 @@ void CMFCApplication2Dlg::OnBnClickedSend()
 			_itoa_s(returnLength, wr, 10);
 			MessageBoxA(0, wr, 0, 0);
 		}
+		/*if (!DeviceIoControl(
+			devicehandle,
+			DEVICE_SEND_DIRECT,
+			message,
+			(wcslen(message) + 1) * 2,
+			NULL,
+			0,
+			&returnLength, 0
+		))
+		{
+			MessageBox(L"DeviceIOControl error", 0, 0);
+		}
+		else
+		{
+			_itoa_s(returnLength, wr, 10);
+			MessageBoxA(0, wr, 0, 0);
+		}
+		if (!DeviceIoControl(
+			devicehandle,
+			DEVICE_SEND_NEITHER,
+			message,
+			(wcslen(message) + 1) * 2,
+			NULL,
+			0,
+			&returnLength, 0
+		))
+		{
+			MessageBox(L"DeviceIOControl error", 0, 0);
+		}
+		else
+		{
+			_itoa_s(returnLength, wr, 10);
+			MessageBoxA(0, wr, 0, 0);
+		}*/
 	}
 }
 
@@ -780,7 +823,7 @@ void CMFCApplication2Dlg::OnBnClickedRec()
 	{
 		if (!DeviceIoControl(
 			devicehandle,
-			DEVICE_REC,
+			DEVICE_REC_BUFF,
 			NULL,
 			0,
 			message,
