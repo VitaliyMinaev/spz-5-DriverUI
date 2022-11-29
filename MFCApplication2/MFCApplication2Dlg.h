@@ -42,4 +42,10 @@ public:
 	afx_msg void OnBnClickedClose();
 	afx_msg void OnBnClickedSend();
 	afx_msg void OnBnClickedRec();
+	afx_msg void OnBnClickedSenddir();
+	afx_msg void OnBnClickedRecdir();
+	afx_msg void OnBnClickedSendneither();
+	afx_msg void OnBnClickedRecneither();
+	afx_msg void OnBnClickedSendbuf();
+	afx_msg void OnBnClickedRecbuf();
 };

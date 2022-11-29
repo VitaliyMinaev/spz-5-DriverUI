@@ -15,8 +15,8 @@
 #define DEVICE_SEND_DIRECT CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_IN_DIRECT, FILE_WRITE_DATA)
 #define DEVICE_SEND_NEITHER CTL_CODE(FILE_DEVICE_UNKNOWN, 0x803, METHOD_NEITHER, FILE_WRITE_DATA)
 
-#define DEVICE_REC_BUFF CTL_CODE(FILE_DEVICE_UNKNOWN, 0x804, METHOD_BUFFERED, FILE_READ_DATA)
-#define DEVICE_REC_DIRECT CTL_CODE(FILE_DEVICE_UNKNOWN, 0x805, METHOD_IN_DIRECT, FILE_READ_DATA)
+#define DEVICE_REC_BUFF CTL_CODE(FILE_DEVICE_UNKNOWN, 0x804, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define DEVICE_REC_DIRECT CTL_CODE(FILE_DEVICE_UNKNOWN, 0x805, METHOD_OUT_DIRECT, FILE_READ_DATA)
 #define DEVICE_REC_NEITHER CTL_CODE(FILE_DEVICE_UNKNOWN, 0x806, METHOD_NEITHER, FILE_READ_DATA)
 
 
@@ -82,8 +82,12 @@ BEGIN_MESSAGE_MAP(CMFCApplication2Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_STOP, &CMFCApplication2Dlg::OnBnClickedStop)
 	ON_BN_CLICKED(IDC_OPEN, &CMFCApplication2Dlg::OnBnClickedOpen)
 	ON_BN_CLICKED(IDC_CLOSE, &CMFCApplication2Dlg::OnBnClickedClose)
-	ON_BN_CLICKED(IDC_SEND, &CMFCApplication2Dlg::OnBnClickedSend)
-	ON_BN_CLICKED(IDC_REC, &CMFCApplication2Dlg::OnBnClickedRec)
+	ON_BN_CLICKED(IDC_SENDDIR, &CMFCApplication2Dlg::OnBnClickedSenddir)
+	ON_BN_CLICKED(IDC_RECDIR, &CMFCApplication2Dlg::OnBnClickedRecdir)
+	ON_BN_CLICKED(IDC_SENDNEITHER, &CMFCApplication2Dlg::OnBnClickedSendneither)
+	ON_BN_CLICKED(IDC_RECNEITHER, &CMFCApplication2Dlg::OnBnClickedRecneither)
+	ON_BN_CLICKED(IDC_SENDBUF, &CMFCApplication2Dlg::OnBnClickedSendbuf)
+	ON_BN_CLICKED(IDC_RECBUF, &CMFCApplication2Dlg::OnBnClickedRecbuf)
 END_MESSAGE_MAP()
 
 
@@ -752,78 +756,14 @@ void CMFCApplication2Dlg::OnBnClickedClose()
 	}
 }
 
-
-void CMFCApplication2Dlg::OnBnClickedSend()
-{
-	WCHAR* message = L"message from ap";
-	ULONG returnLength;
-	char wr[4] = { 0 };
-	if (devicehandle != INVALID_HANDLE_VALUE && devicehandle != NULL)
-	{
-		if (!DeviceIoControl(
-			devicehandle,
-			DEVICE_SEND_BUFF,
-			message,
-			(wcslen(message) + 1) * 2,
-			NULL,
-			0,
-			&returnLength, 0
-		))
-		{
-			MessageBox(L"DeviceIOControl error", 0, 0);
-		}
-		else
-		{
-			_itoa_s(returnLength, wr, 10);
-			MessageBoxA(0, wr, 0, 0);
-		}
-		/*if (!DeviceIoControl(
-			devicehandle,
-			DEVICE_SEND_DIRECT,
-			message,
-			(wcslen(message) + 1) * 2,
-			NULL,
-			0,
-			&returnLength, 0
-		))
-		{
-			MessageBox(L"DeviceIOControl error", 0, 0);
-		}
-		else
-		{
-			_itoa_s(returnLength, wr, 10);
-			MessageBoxA(0, wr, 0, 0);
-		}
-		if (!DeviceIoControl(
-			devicehandle,
-			DEVICE_SEND_NEITHER,
-			message,
-			(wcslen(message) + 1) * 2,
-			NULL,
-			0,
-			&returnLength, 0
-		))
-		{
-			MessageBox(L"DeviceIOControl error", 0, 0);
-		}
-		else
-		{
-			_itoa_s(returnLength, wr, 10);
-			MessageBoxA(0, wr, 0, 0);
-		}*/
-	}
-}
-
-
-void CMFCApplication2Dlg::OnBnClickedRec()
-{
+void Read(PWCHAR* buffer, DWORD IoControlCode) {
 	WCHAR message[1024] = { 0 };
 	ULONG returnLength = 0;
 	if (devicehandle != INVALID_HANDLE_VALUE && devicehandle != NULL)
 	{
 		if (!DeviceIoControl(
 			devicehandle,
-			DEVICE_REC_BUFF,
+			IoControlCode,
 			NULL,
 			0,
 			message,
@@ -831,11 +771,72 @@ void CMFCApplication2Dlg::OnBnClickedRec()
 			&returnLength, 0
 		))
 		{
-			MessageBox(L"DeviceIOControl error", 0, 0);
+			MessageBox(0,L"DeviceIOControl BUFFERED error", 0, 0);
 		}
-		else		
-		{			
-			MessageBox(message,0);
+		else
+		{
+			MessageBox(0, message, 0, 0);
 		}
 	}
+}
+void Write(PWCHAR buffer, DWORD IoControlCode) {
+	PWCHAR message = buffer;
+	ULONG returnLength;
+	char wr[4] = { 0 };
+	if (devicehandle != INVALID_HANDLE_VALUE && devicehandle != NULL)
+	{
+		if (!DeviceIoControl(
+			devicehandle,
+			IoControlCode,
+			message,
+			(wcslen(message) + 1)*2,
+			NULL,
+			0,
+			&returnLength, 0
+		))
+		{
+			MessageBox(0,L"DeviceIOControl BUFFERED error", 0, 0);
+		}
+		else
+		{
+			_itoa_s(returnLength, wr, 10);
+			MessageBoxA(0, wr, 0, 0);
+		}
+	}
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedSenddir()
+{
+	Write(L"in direct", DEVICE_SEND_DIRECT);
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedRecdir()
+{
+	Read(NULL, DEVICE_REC_DIRECT);
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedSendneither()
+{
+	Write(L"neither", DEVICE_SEND_NEITHER);
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedRecneither()
+{
+	Read(NULL,DEVICE_REC_NEITHER);
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedSendbuf()
+{
+	Write(L"Buffered", DEVICE_SEND_BUFF);
+}
+
+
+void CMFCApplication2Dlg::OnBnClickedRecbuf()
+{
+	Read(NULL, DEVICE_REC_BUFF);
 }
