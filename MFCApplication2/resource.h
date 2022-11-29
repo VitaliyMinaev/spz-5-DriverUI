@@ -25,6 +25,7 @@
 #define IDC_SENDNEITHER                 1015
 #define IDC_BUTTON4                     1016
 #define IDC_RECNEITHER                  1016
+#define IDC_BTUNK                       1017
 
 // Next default values for new objects
 // 

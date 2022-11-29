@@ -48,4 +48,6 @@ public:
 	afx_msg void OnBnClickedRecneither();
 	afx_msg void OnBnClickedSendbuf();
 	afx_msg void OnBnClickedRecbuf();
+
+	afx_msg void OnBnClickedBtunk();
 };
