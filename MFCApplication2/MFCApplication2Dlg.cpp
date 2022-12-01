@@ -1,8 +1,4 @@
-﻿
-// MFCApplication2Dlg.cpp: файл реализации
-//
-
-#include "pch.h"
+﻿#include "pch.h"
 #include "framework.h"
 #include "MFCApplication2.h"
 #include "MFCApplication2Dlg.h"
@@ -27,24 +23,16 @@
 #define new DEBUG_NEW
 #endif
 
-
-
-// Диалоговое окно CAboutDlg используется для описания сведений о приложении
-
 class CAboutDlg : public CDialogEx
 {
 public:
 	CAboutDlg();
-
-// Данные диалогового окна
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // поддержка DDX/DDV
-
-// Реализация
+	virtual void DoDataExchange(CDataExchange* pDX);  
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -101,9 +89,6 @@ BOOL CMFCApplication2Dlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// Добавление пункта "О программе..." в системное меню.
-
-	// IDM_ABOUTBOX должен быть в пределах системной команды.
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
@@ -121,8 +106,6 @@ BOOL CMFCApplication2Dlg::OnInitDialog()
 		}
 	}
 
-	// Задает значок для этого диалогового окна.  Среда делает это автоматически,
-	//  если главное окно приложения не является диалоговым
 	SetIcon(m_hIcon, TRUE);			// Крупный значок
 	SetIcon(m_hIcon, FALSE);		// Мелкий значок
 
@@ -143,10 +126,6 @@ void CMFCApplication2Dlg::OnSysCommand(UINT nID, LPARAM lParam)
 		CDialogEx::OnSysCommand(nID, lParam);
 	}
 }
-
-// При добавлении кнопки свертывания в диалоговое окно нужно воспользоваться приведенным ниже кодом,
-//  чтобы нарисовать значок.  Для приложений MFC, использующих модель документов или представлений,
-//  это автоматически выполняется рабочей областью.
 
 void CMFCApplication2Dlg::OnPaint()
 {
@@ -173,8 +152,6 @@ void CMFCApplication2Dlg::OnPaint()
 	}
 }
 
-// Система вызывает эту функцию для получения отображения курсора при перемещении
-//  свернутого окна.
 HCURSOR CMFCApplication2Dlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -197,7 +174,7 @@ void CMFCApplication2Dlg::OnBnClickedAdd()
 	schSCManager = InitManager();  // full access rights 
 	if (schSCManager == NULL)
 	{		
-		Trace(L"OpenSCManager failed (%d)");		
+		Trace(L"Can not open SCManager (%d)");		
 		return;
 	}
 	schService = CreateService(
@@ -216,7 +193,7 @@ void CMFCApplication2Dlg::OnBnClickedAdd()
 		NULL);                     // no password 
 	if (schService == NULL)
 	{
-		Trace(L"CreateService failed (%d)\n");		
+		Trace(L"Can not create service\n");		
 		CloseServiceHandle(schSCManager);
 		return;
 	}
@@ -242,7 +219,7 @@ void CMFCApplication2Dlg::OnBnClickedDelete()
 	schSCManager = InitManager();  // full access rights 
 	if (schSCManager == NULL)
 	{
-		Trace(_T("OpenSCManager failed (%d)"));
+		Trace(_T("OpenSCManager failed"));
 		return;
 	}
 	schService = OpenService(
@@ -252,7 +229,7 @@ void CMFCApplication2Dlg::OnBnClickedDelete()
 
 	if (schService == NULL)
 	{
-		Trace(_T("OpenService failed (%d)\n"));
+		Trace(_T("OpenService failed\n"));
 		CloseServiceHandle(schSCManager);
 		return;
 	}
@@ -260,10 +237,10 @@ void CMFCApplication2Dlg::OnBnClickedDelete()
 
 	if (!DeleteService(schService))
 	{
-		Trace(_T("DeleteService failed (%d)\n"));
+		Trace(_T("Can not delete service\n"));
 	}
 	else {
-		Trace(_T("Service deleted successfully\n"));
+		Trace(_T("Service deleted successfully!\n"));
 	}
 
 	CloseServiceHandle(schService);
@@ -733,9 +710,9 @@ stop_cleanup:
 
 HANDLE devicehandle = NULL;
 void CMFCApplication2Dlg::OnBnClickedOpen()
-{
+{/*link-my-win-device*/
 	devicehandle = CreateFile(
-		L"\\\\.\\link-my-win-device",
+		L"\\\\.\\mydevicedriverlink",
 		GENERIC_ALL,
 		NULL,
 		NULL,
@@ -812,7 +789,7 @@ void Write(PWCHAR buffer, DWORD IoControlCode) {
 
 void CMFCApplication2Dlg::OnBnClickedSenddir()
 {
-	Write(L"in direct", DEVICE_SEND_DIRECT);
+	Write(L"Direct", DEVICE_SEND_DIRECT);
 }
 
 
@@ -824,7 +801,7 @@ void CMFCApplication2Dlg::OnBnClickedRecdir()
 
 void CMFCApplication2Dlg::OnBnClickedSendneither()
 {
-	Write(L"neither", DEVICE_SEND_NEITHER);
+	Write(L"Neither", DEVICE_SEND_NEITHER);
 }
 
 
